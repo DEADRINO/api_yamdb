@@ -1,13 +1,16 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-# CategoryViewSet, GenreViewSet, TitleViewSet
+from rest_framework import mixins, viewsets
 from api.models import Category, Genre, Title
 from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    lookup_field = 'slug'
 
 
 class GenreViewSet(viewsets.ModelViewSet):

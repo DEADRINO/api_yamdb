@@ -13,5 +13,5 @@ router.register(r'titles', TitleViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('v1/', include(router.urls)),
 ]
