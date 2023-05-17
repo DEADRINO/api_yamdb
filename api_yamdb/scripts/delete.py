@@ -1,3 +1,4 @@
+# for example: python manage.py runscript delete --script-args genre_title
 from api.models import Category, Genre, GenreTitle, Title
 
 MODELS = {
