@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'core',
-    'api'
+    'api',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -104,3 +105,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+
+TEXT_LIMIT = 30
