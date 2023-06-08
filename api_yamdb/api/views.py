@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import *
 from .permissions import *
@@ -148,13 +149,19 @@ class GenreViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    lookup_field = 'slug'
+    permission_classes = (IsReadOnlyAuthor,)
+    pagination_class = LimitOffsetPagination
+    # lookup_field = 'slug'
+    search_fields = ['name']
+
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    permission_classes = (IsReadOnlyAuthor, )
+
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
