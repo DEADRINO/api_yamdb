@@ -1,6 +1,40 @@
 from rest_framework import serializers
-from api.models import Category, Genre, Title
-from reviews.models import Review, Comment
+from reviews.models import Comment, Review, User
+
+from reviews.models import Category, Genre, Title
+
+USERNAME_LENGHT = 150
+EMAIL_LENGHT = 250
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=USERNAME_LENGHT,
+        required=True
+    )
+    confirmation_code = serializers.CharField(required=True)
+
+
+class SignupSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=USERNAME_LENGHT,
+        required=True,
+    )
+    email = serializers.EmailField(
+        max_length=EMAIL_LENGHT,
+        required=True
+    )
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class UserSerializer(AdminUserSerializer):
+    class Meta(AdminUserSerializer.Meta):
+        model = User
+        read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):

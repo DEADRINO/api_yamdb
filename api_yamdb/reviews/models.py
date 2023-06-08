@@ -2,10 +2,30 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from api_yamdb.settings import TEXT_LIMIT
+from django.contrib.auth.models import AbstractUser
 
 
-User = get_user_model()
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
 
+ROLES = (
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
+)
+
+class User(AbstractUser):
+    bio = models.TextField(
+        verbose_name='Биография',
+        blank=True,
+    )
+    role = models.CharField(
+        verbose_name='Роль',
+        choices=ROLES,
+        max_length=10,
+        default=USER
+    )
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
@@ -75,7 +95,7 @@ class Review(models.Model):
 
     class Meta:
         verbose_name = 'Отзыв'
-        help_text = 'Отзыв о произведении'
+        #help_text = 'Отзыв о произведении' 
         ordering = ('-pub_date',)
 
     def __str__(self):
@@ -110,7 +130,7 @@ class Comment(models.Model):
 
     class Meta:
         verbose_name = 'Комментарий',
-        help_text = 'Комментарий к отзыву'
+        #help_text = 'Комментарий к отзыву'
         ordering = ('-pub_date',)
 
     def __str__(self):
