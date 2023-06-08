@@ -41,7 +41,7 @@ class UserSerializer(AdminUserSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
@@ -52,12 +52,9 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
-
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug')
+class TitleReadSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
+    category = CategorySerializer()
 
     def get_rating(self, obj):
         avg_scrores = obj.reviews.aggregate(rating=Avg('score'))
@@ -71,11 +68,26 @@ class TitleSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'year',
+            'rating',
             'description',
             'category',
-            'genre',
-            'rating'
+            'genre'
         )
+
+
+class TitleEditSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug')
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

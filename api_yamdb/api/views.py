@@ -20,10 +20,12 @@ from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleReadSerializer,
+    TitleEditSerializer,
     TokenSerializer,
     UserSerializer
 )
+
 
 class SignUpView(APIView):
     http_method_names = ['post', ]
@@ -39,7 +41,8 @@ class SignUpView(APIView):
         if not existing_user:
             user = self.create_user(username, email)
             return Response(
-                'Пользователь с таким именем пользователя или email уже существует.',
+                'Пользователь с таким именем пользователя или email'
+                'уже существует.',
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -60,10 +63,8 @@ class SignUpView(APIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
-
     def check_existing_user(self, username, email):
         return User.objects.filter(Q(username=username) | Q(email=email)).exists()
-
 
     def create_user(self, username, email):
         try:
@@ -74,7 +75,6 @@ class SignUpView(APIView):
             return user
         except IntegrityError:
             return None
-        
 
     def send_confirmation_email(self, email, confirmation_code):
         subject = 'Добро пожаловать!'
@@ -98,9 +98,12 @@ class GetTokenView(APIView):
         user = get_object_or_404(User, username=username)
         if default_token_generator.check_token(user, confirmation_code):
             access_token = str(RefreshToken.for_user(user).access_token)
-            return Response({'token': access_token}, status=status.HTTP_201_CREATED)
+            return Response({'token': access_token},
+                            status=status.HTTP_201_CREATED)
 
-        return Response('Некорректный код.', status=status.HTTP_400_BAD_REQUEST)
+        return Response('Некорректный код.',
+                        status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -126,11 +129,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def _update_current_user(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user,
+                                    data=request.data,
+                                    partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class CategoryViewSet(mixins.ListModelMixin,
@@ -140,6 +144,8 @@ class CategoryViewSet(mixins.ListModelMixin,
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsReadOnlyAuthor, )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
@@ -151,17 +157,20 @@ class GenreViewSet(mixins.ListModelMixin,
     serializer_class = GenreSerializer
     permission_classes = (IsReadOnlyAuthor,)
     pagination_class = LimitOffsetPagination
-    # lookup_field = 'slug'
-    search_fields = ['name']
-
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsReadOnlyAuthor, )
 
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return TitleReadSerializer
+        return TitleEditSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

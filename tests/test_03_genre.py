@@ -67,10 +67,6 @@ class Test03GenreAPI:
 
         response = admin_client.get(f'{url}?search={post_data["name"]}')
         data = response.json()
-        print('++' * 200)
-        print(post_data["name"])
-        print(data['results'])
-        print('++' * 200)
         assert len(data['results']) == 1, (
             f'Проверьте, что GET-запрос к `{url}?search=<name>` возвращает '
             'данные только тех жанров, поле `name` которых удовлетворяет '

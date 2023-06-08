@@ -15,6 +15,7 @@ ROLES = (
     (ADMIN, 'Администратор'),
 )
 
+
 class User(AbstractUser):
     bio = models.TextField(
         verbose_name='Биография',
@@ -26,6 +27,7 @@ class User(AbstractUser):
         max_length=10,
         default=USER
     )
+
     class Meta(AbstractUser.Meta):
         ordering = ('username',)
 
@@ -40,6 +42,7 @@ class User(AbstractUser):
     def is_moderator(self):
         return self.role == MODERATOR
 
+
 class Category(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -48,6 +51,7 @@ class Category(models.Model):
 class Genre(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
+
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
