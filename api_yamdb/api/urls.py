@@ -25,3 +25,4 @@ urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/auth/signup/', views.SignUpView.as_view()),
     path('v1/auth/token/', views.GetTokenView.as_view()),
+]
