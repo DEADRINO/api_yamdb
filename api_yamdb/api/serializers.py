@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from reviews.models import Comment, Review, User
-
 from reviews.models import Category, Genre, Title
+from django.db.models import Avg
 
 USERNAME_LENGHT = 150
 EMAIL_LENGHT = 250
+
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
@@ -52,13 +53,29 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug')
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+        avg_scrores = obj.reviews.aggregate(rating=Avg('score'))
+        if not avg_scrores['rating']:
+            return None
+        return int(avg_scrores['rating'])
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'category',
+            'genre',
+            'rating'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):

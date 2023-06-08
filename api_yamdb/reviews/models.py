@@ -108,8 +108,13 @@ class Review(models.Model):
 
     class Meta:
         verbose_name = 'Отзыв'
-        #help_text = 'Отзыв о произведении' 
         ordering = ('-pub_date',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            ),
+        )
 
     def __str__(self):
         return self.text[:TEXT_LIMIT]
@@ -143,7 +148,6 @@ class Comment(models.Model):
 
     class Meta:
         verbose_name = 'Комментарий',
-        #help_text = 'Комментарий к отзыву'
         ordering = ('-pub_date',)
 
     def __str__(self):
