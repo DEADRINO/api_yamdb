@@ -1,5 +1,5 @@
 # for example: python manage.py runscript delete --script-args genre_title
-from api.models import Category, Genre, GenreTitle, Title
+from reviews.models import Category, Genre, GenreTitle, Title
 
 MODELS = {
     'genre_title': GenreTitle,

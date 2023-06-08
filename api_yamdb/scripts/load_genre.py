@@ -1,4 +1,4 @@
-from api.models import Genre
+from reviews.models import Genre
 import csv
 
 

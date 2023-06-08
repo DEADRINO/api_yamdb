@@ -1,5 +1,4 @@
 from warnings import filters
-from .permissions import *
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
@@ -9,14 +8,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from reviews.models import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 
-
+from reviews.models import *
+from .permissions import *
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              SignupSerializer)
-
 from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
@@ -112,7 +110,8 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
-    @action(detail=False, url_path='me', methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated,])
+    @action(detail=False, url_path='me', methods=['get', 'patch'],
+            permission_classes=[permissions.IsAuthenticated, ])
     def me(self, request):
         if request.method == 'GET':
             return self._get_current_user(request)
@@ -139,6 +138,7 @@ class CategoryViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsReadOnlyAuthor, )
     lookup_field = 'slug'
 
 

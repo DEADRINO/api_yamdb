@@ -1,4 +1,4 @@
-from api.models import Category
+from reviews.models import Category
 import csv
 
 
