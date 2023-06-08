@@ -27,7 +27,7 @@ from .serializers import (
 )
 
 class SignUpView(APIView):
-    http_method_names = ['post']
+    http_method_names = ['post', ]
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -35,21 +35,22 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data['username']
         email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
 
         existing_user = self.check_existing_user(username, email)
-        if existing_user:
+        if not existing_user:
+            user = self.create_user(username, email)
             return Response(
                 'Пользователь с таким именем пользователя или email уже существует.',
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = self.create_user(username, email, password)
         if not user:
             return Response(
                 'Не удалось создать пользователя.',
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
+        else:
+            user = existing_user
 
         confirmation_code = default_token_generator.make_token(user)
         self.send_confirmation_email(email, confirmation_code)
@@ -58,7 +59,7 @@ class SignUpView(APIView):
             'username': user.username,
             'email': user.email
         }
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
     def check_existing_user(self, username, email):
@@ -111,7 +112,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
-    @action(detail=False, methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, url_path='me', methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated,])
     def me(self, request):
         if request.method == 'GET':
             return self._get_current_user(request)
@@ -158,7 +159,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsReadOnlyAuthor)
+    permission_classes = (IsReadOnlyAuthor,)
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -174,7 +175,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsReadOnlyAuthor)
+    permission_classes = (IsReadOnlyAuthor,)
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))

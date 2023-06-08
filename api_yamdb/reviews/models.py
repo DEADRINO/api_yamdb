@@ -26,6 +26,19 @@ class User(AbstractUser):
         max_length=10,
         default=USER
     )
+    class Meta(AbstractUser.Meta):
+        ordering = ('username',)
+
+    def __str__(self):
+        return self.username
+
+    @property
+    def is_admin(self):
+        return self.is_staff or self.role == ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
