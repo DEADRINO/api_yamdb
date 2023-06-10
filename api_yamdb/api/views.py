@@ -5,6 +5,7 @@ from django.core.mail import EmailMessage
 from django.db import IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,6 +26,7 @@ from .serializers import (
     TokenSerializer,
     UserSerializer
 )
+from .filters import FilterTitle
 
 
 class SignUpView(APIView):
@@ -166,6 +168,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
     permission_classes = (IsReadOnlyAuthor, )
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FilterTitle
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
