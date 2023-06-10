@@ -1,9 +1,19 @@
 from rest_framework import permissions
 
 
+class AllowRegistrationPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # Разрешить доступ только для метода POST (регистрация)
+        return request.method == 'POST'
+    
+    
 class IsAdminPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_admin
+
+
+class IsAdminPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
 
 
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
@@ -11,8 +21,6 @@ class IsAdminOrReadOnlyPermission(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or (request.user.is_authenticated and request.user.is_admin)
-
-        )
 
 
 class IsReadOnlyAuthor(permissions.BasePermission):

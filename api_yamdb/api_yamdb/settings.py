@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'core',
     'api',
     'reviews',
@@ -128,5 +130,5 @@ TEXT_LIMIT = 30
 YAMDB_EMAIL = 'support@apiyamdb.com'
 
 USER_LENGHT = 150
-
+RESERVED_USERNAMES = ['me']
 EMAIL_LENGHT = 250

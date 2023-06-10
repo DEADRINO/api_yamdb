@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from reviews.validators import names_validator, symbols_validator
 from api_yamdb.settings import TEXT_LIMIT
 from django.contrib.auth.models import AbstractUser
-
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -16,6 +17,20 @@ ROLES = (
 )
 
 class User(AbstractUser):
+    username = models.CharField(
+    verbose_name='Имя пользователя',
+    max_length=settings.USER_LENGHT,
+    unique=True,
+    validators=[
+        symbols_validator,
+        names_validator
+    ],
+    )
+    email = models.EmailField(
+        verbose_name='Адрес эл. почты',
+        max_length=settings.EMAIL_LENGHT,
+        unique=True
+    )
     bio = models.TextField(
         verbose_name='Биография',
         blank=True,
@@ -36,9 +51,6 @@ class User(AbstractUser):
     def is_admin(self):
         return self.is_staff or self.role == ADMIN or self.is_superuser
 
-    @property
-    def is_moderator(self):
-        return self.role == MODERATOR
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
@@ -108,6 +120,7 @@ class Review(models.Model):
 
     class Meta:
         verbose_name = 'Отзыв'
+        #help_text = 'Отзыв о произведении' 
         ordering = ('-pub_date',)
         constraints = (
             models.UniqueConstraint(
@@ -148,6 +161,7 @@ class Comment(models.Model):
 
     class Meta:
         verbose_name = 'Комментарий',
+        #help_text = 'Комментарий к отзыву'
         ordering = ('-pub_date',)
 
     def __str__(self):

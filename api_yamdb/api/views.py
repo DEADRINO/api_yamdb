@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from reviews.models import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
+from django.core.mail import send_mail
 
 
 from api.serializers import (CommentSerializer, ReviewSerializer,
@@ -29,7 +30,7 @@ from .serializers import (
 class SignUpView(APIView):
     http_method_names = ['post', ]
     permission_classes = (permissions.AllowAny,)
-
+    
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -39,21 +40,17 @@ class SignUpView(APIView):
         existing_user = self.check_existing_user(username, email)
         if not existing_user:
             user = self.create_user(username, email)
-            return Response(
-                'Пользователь с таким именем пользователя или email уже существует.',
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not user:
-            return Response(
-                'Не удалось создать пользователя.',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            if not user:
+                return Response(
+                    'Не удалось создать пользователя.',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             user = existing_user
 
         confirmation_code = default_token_generator.make_token(user)
-        self.send_confirmation_email(email, confirmation_code)
+        to_email = email
+        self.send_confirmation_email(to_email, confirmation_code)
 
         response_data = {
             'username': user.username,
@@ -61,10 +58,8 @@ class SignUpView(APIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
-
     def check_existing_user(self, username, email):
-        return User.objects.filter(Q(username=username) | Q(email=email)).exists()
-
+        return User.objects.filter(username=username, email=email).first()
 
     def create_user(self, username, email):
         try:
@@ -75,7 +70,6 @@ class SignUpView(APIView):
             return user
         except IntegrityError:
             return None
-        
 
     def send_confirmation_email(self, email, confirmation_code):
         subject = 'Добро пожаловать!'
@@ -112,7 +106,12 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
-    @action(detail=False, url_path='me', methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated,])
+    @action(
+        detail=False,
+        url_path='me',
+        methods=['get', 'patch'],
+        permission_classes=[permissions.IsAuthenticated,]
+    )
     def me(self, request):
         if request.method == 'GET':
             return self._get_current_user(request)
