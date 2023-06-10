@@ -1,7 +1,7 @@
 from rest_framework import serializers
+from reviews.validators import names_validator, symbols_validator
 from reviews.models import Comment, Review, User
 from reviews.models import Category, Genre, Title
-from django.db.models import Avg
 
 USERNAME_LENGHT = 150
 EMAIL_LENGHT = 250
@@ -10,7 +10,8 @@ EMAIL_LENGHT = 250
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=USERNAME_LENGHT,
-        required=True
+        required=True,
+        validators=[symbols_validator, names_validator]
     )
     confirmation_code = serializers.CharField(required=True)
 
@@ -19,6 +20,7 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=USERNAME_LENGHT,
         required=True,
+        validators=[symbols_validator, names_validator]
     )
     email = serializers.EmailField(
         max_length=EMAIL_LENGHT,
@@ -29,7 +31,14 @@ class SignupSerializer(serializers.Serializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = (
+            'username',
+            'email',
+            'role',
+            'bio',
+            'first_name',
+            'last_name'
+        )
 
 
 class UserSerializer(AdminUserSerializer):
@@ -51,17 +60,11 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
         lookup_field = 'slug'
 
-
-class TitleReadSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(many=True, read_only=True)
-
-    def get_rating(self, obj):
-        avg_scrores = obj.reviews.aggregate(rating=Avg('score'))
-        if not avg_scrores['rating']:
-            return None
-        return int(avg_scrores['rating'])
+class TitleSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field=('slug')
+    )
 
     class Meta:
         model = Title
