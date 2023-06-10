@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from reviews.validators import names_validator, symbols_validator
 from api_yamdb.settings import TEXT_LIMIT
 from django.contrib.auth.models import AbstractUser
 
@@ -16,6 +18,20 @@ ROLES = (
 )
 
 class User(AbstractUser):
+    username = models.CharField(
+    verbose_name='Имя пользователя',
+    max_length=settings.USER_LENGHT,
+    unique=True,
+    validators=[
+        symbols_validator,
+        names_validator
+    ],
+    )
+    email = models.EmailField(
+        verbose_name='Адрес эл. почты',
+        max_length=settings.EMAIL_LENGHT,
+        unique=True
+    )
     bio = models.TextField(
         verbose_name='Биография',
         blank=True,
