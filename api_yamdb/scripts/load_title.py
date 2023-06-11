@@ -1,6 +1,6 @@
 from core.shortcuts import get_object_or_none
 
-from api.models import Category, Title
+from reviews.models import Category, Title
 import csv
 
 

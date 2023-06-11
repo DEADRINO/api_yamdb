@@ -1,31 +1,33 @@
 from warnings import filters
-from .permissions import *
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from reviews.models import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from django.core.mail import send_mail
-
-
+from reviews.models import *
+from .permissions import *
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              SignupSerializer)
-
 from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleReadSerializer,
+    TitleEditSerializer,
     TokenSerializer,
     UserSerializer
 )
+from .filters import FilterTitle
+
 
 class SignUpView(APIView):
     http_method_names = ['post', ]
@@ -43,8 +45,7 @@ class SignUpView(APIView):
             if not user:
                 return Response(
                     'Не удалось создать пользователя.',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                    status=status.HTTP_400_BAD_REQUEST==
         else:
             user = existing_user
 
@@ -93,9 +94,12 @@ class GetTokenView(APIView):
         user = get_object_or_404(User, username=username)
         if default_token_generator.check_token(user, confirmation_code):
             access_token = str(RefreshToken.for_user(user).access_token)
-            return Response({'token': access_token}, status=status.HTTP_201_CREATED)
+            return Response({'token': access_token},
+                            status=status.HTTP_201_CREATED)
 
-        return Response('Некорректный код.', status=status.HTTP_400_BAD_REQUEST)
+        return Response('Некорректный код.',
+                        status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -125,11 +129,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def _update_current_user(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user,
+                                    data=request.data,
+                                    partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class CategoryViewSet(mixins.ListModelMixin,
@@ -138,6 +143,9 @@ class CategoryViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsReadOnlyAuthor, )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
@@ -147,13 +155,25 @@ class GenreViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsReadOnlyAuthor,)
+    pagination_class = LimitOffsetPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    permission_classes = (IsReadOnlyAuthor, )
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FilterTitle
+
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return TitleReadSerializer
+        return TitleEditSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

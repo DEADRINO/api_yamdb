@@ -16,6 +16,7 @@ ROLES = (
     (ADMIN, 'Администратор'),
 )
 
+
 class User(AbstractUser):
     username = models.CharField(
     verbose_name='Имя пользователя',
@@ -41,6 +42,7 @@ class User(AbstractUser):
         max_length=10,
         default=USER
     )
+
     class Meta(AbstractUser.Meta):
         ordering = ('username',)
 
@@ -50,6 +52,7 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.is_staff or self.role == ADMIN or self.is_superuser
+
 
 
 class Category(models.Model):
@@ -67,15 +70,16 @@ class Title(models.Model):
     year = models.IntegerField()
     description = models.CharField(max_length=200, blank=True, null=True)
     category = models.ForeignKey(
-        Category, on_delete=models.DO_NOTHING,
-        related_name='title'
+        Category, on_delete=models.SET_NULL,
+        related_name='title',
+        null=True
     )
     genre = models.ManyToManyField(Genre, through='GenreTitle')
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.DO_NOTHING)
-    title = models.ForeignKey(Title, on_delete=models.DO_NOTHING)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
 
 class Review(models.Model):
