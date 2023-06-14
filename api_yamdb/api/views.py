@@ -21,7 +21,6 @@ from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleReadSerializer,
     TitleEditSerializer,
     TokenSerializer,
     UserSerializer
@@ -45,7 +44,7 @@ class SignUpView(APIView):
             if not user:
                 return Response(
                     'Не удалось создать пользователя.',
-                    status=status.HTTP_400_BAD_REQUEST==
+                    status=status.HTTP_400_BAD_REQUEST)
         else:
             user = existing_user
 
