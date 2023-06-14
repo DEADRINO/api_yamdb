@@ -57,7 +57,6 @@ class User(AbstractUser):
     def is_moderator(self):
         return self.role == MODERATOR
 
-
 class Category(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
