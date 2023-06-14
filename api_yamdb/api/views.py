@@ -21,7 +21,7 @@ from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleEditSerializer,
+    TitleReadSerializer,
     TokenSerializer,
     UserSerializer
 )
@@ -142,7 +142,7 @@ class CategoryViewSet(mixins.ListModelMixin,
                       viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsReadOnlyAuthor, )
+    permission_classes = (IsAdminOrReadOnlyPermission, )
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -154,7 +154,7 @@ class GenreViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsReadOnlyAuthor,)
+    permission_classes = (IsAdminOrReadOnlyPermission,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -164,7 +164,7 @@ class GenreViewSet(mixins.ListModelMixin,
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
-    permission_classes = (IsReadOnlyAuthor, )
+    permission_classes = (IsAdminOrReadOnlyPermission, )
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
@@ -172,7 +172,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
             return TitleReadSerializer
-        return TitleEditSerializer
+        return TitleReadSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

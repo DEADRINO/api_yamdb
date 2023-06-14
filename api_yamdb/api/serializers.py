@@ -79,7 +79,7 @@ class TitleSerializer(serializers.ModelSerializer):
         )
 
 
-class TitleEditSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug')
