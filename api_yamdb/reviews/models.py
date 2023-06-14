@@ -54,7 +54,6 @@ class User(AbstractUser):
         return self.is_staff or self.role == ADMIN or self.is_superuser
 
 
-
 class Category(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
