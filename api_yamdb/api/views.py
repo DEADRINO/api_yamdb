@@ -22,6 +22,7 @@ from .serializers import (
     CategorySerializer,
     GenreSerializer,
     TitleEditSerializer,
+    TitleSerializer,
     TokenSerializer,
     UserSerializer
 )
@@ -171,7 +172,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
-            return TitleReadSerializer
+            return TitleSerializer
         return TitleEditSerializer
 
 
