@@ -12,7 +12,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from django.core.mail import send_mail
 from reviews.models import *
 from .permissions import *
 from api.serializers import (CommentSerializer, ReviewSerializer,
@@ -21,7 +20,7 @@ from .serializers import (
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleEditSerializer,
+    TitleReadSerializer,
     TitleSerializer,
     TokenSerializer,
     UserSerializer
@@ -165,15 +164,15 @@ class GenreViewSet(mixins.ListModelMixin,
 class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Title.objects.all()
-    permission_classes = (IsAdminOrReadOnlyPermission, )
+    permission_classes = (IsAdminOrReadOnlyPermission,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
-            return TitleSerializer
-        return TitleEditSerializer
+            return TitleReadSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
