@@ -3,7 +3,6 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets, permissions
@@ -12,8 +11,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import *
-from .permissions import *
+from reviews.models import (Category, User, Genre, Review, Title)
+from .permissions import (IsAdminPermission, IsAdminOrReadOnlyPermission,
+                          IsReadOnlyAuthor)
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              SignupSerializer)
 from .serializers import (
