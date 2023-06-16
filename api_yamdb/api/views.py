@@ -31,7 +31,7 @@ from .filters import FilterTitle
 class SignUpView(APIView):
     http_method_names = ['post', ]
     permission_classes = (permissions.AllowAny,)
-    
+
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from reviews.validators import names_validator, symbols_validator
 from api_yamdb.settings import TEXT_LIMIT
@@ -19,13 +18,13 @@ ROLES = (
 
 class User(AbstractUser):
     username = models.CharField(
-    verbose_name='Имя пользователя',
-    max_length=settings.USER_LENGHT,
-    unique=True,
-    validators=[
-        symbols_validator,
-        names_validator
-    ],
+        verbose_name='Имя пользователя',
+        max_length=settings.USER_LENGHT,
+        unique=True,
+        validators=[
+            symbols_validator,
+            names_validator
+        ],
     )
     email = models.EmailField(
         verbose_name='Адрес эл. почты',
@@ -52,10 +51,11 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.is_staff or self.role == ADMIN or self.is_superuser
-    
+
     @property
     def is_moderator(self):
         return self.role == MODERATOR
+
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
@@ -126,7 +126,6 @@ class Review(models.Model):
 
     class Meta:
         verbose_name = 'Отзыв'
-        #help_text = 'Отзыв о произведении' 
         ordering = ('-pub_date',)
         constraints = (
             models.UniqueConstraint(
@@ -167,7 +166,6 @@ class Comment(models.Model):
 
     class Meta:
         verbose_name = 'Комментарий',
-        #help_text = 'Комментарий к отзыву'
         ordering = ('-pub_date',)
 
     def __str__(self):
