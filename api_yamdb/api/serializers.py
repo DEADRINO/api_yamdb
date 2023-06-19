@@ -2,7 +2,6 @@ from rest_framework import serializers
 from reviews.validators import names_validator, symbols_validator
 from reviews.models import Comment, Review, User
 from reviews.models import Category, Genre, Title
-from django.db.models import Avg
 
 USERNAME_LENGHT = 150
 EMAIL_LENGHT = 250
@@ -63,15 +62,9 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(read_only=True)
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-
-    def get_rating(self, obj):
-        avg_scrores = obj.reviews.aggregate(rating=Avg('score'))
-        if not avg_scrores['rating']:
-            return None
-        return int(avg_scrores['rating'])
 
     class Meta:
         model = Title
