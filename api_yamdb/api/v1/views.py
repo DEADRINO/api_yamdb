@@ -2,7 +2,6 @@ from warnings import filters
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets, permissions
@@ -11,19 +10,29 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import (Category, User, Genre, Review, Title)
-from .permissions import (IsAdminPermission, IsAdminOrReadOnlyPermission,
-                          IsReadOnlyAuthor)
-from api.serializers import (CommentSerializer, ReviewSerializer,
-                             SignupSerializer)
+from reviews.models import (
+    Category,
+    User,
+    Genre,
+    Review,
+    Title,
+)
+from .permissions import (
+    IsAdminPermission,
+    IsAdminOrReadOnlyPermission,
+    IsReadOnlyAuthor,
+)
 from .serializers import (
+    CommentSerializer,
+    ReviewSerializer,
+    SignupSerializer,
     AdminUserSerializer,
     CategorySerializer,
     GenreSerializer,
     TitleReadSerializer,
     TitleSerializer,
     TokenSerializer,
-    UserSerializer
+    UserSerializer,
 )
 from .filters import FilterTitle
 
@@ -34,42 +43,18 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
+        if serializer.is_valid():
+            user = serializer.save()
+            confirmation_code = default_token_generator.make_token(user)
+            self.send_confirmation_email(user.email, confirmation_code)
 
-        existing_user = self.check_existing_user(username, email)
-        if not existing_user:
-            user = self.create_user(username, email)
-            if not user:
-                return Response(
-                    'Не удалось создать пользователя.',
-                    status=status.HTTP_400_BAD_REQUEST)
-        else:
-            user = existing_user
+            response_data = {
+                'username': user.username,
+                'email': user.email
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
 
-        confirmation_code = default_token_generator.make_token(user)
-        to_email = email
-        self.send_confirmation_email(to_email, confirmation_code)
-
-        response_data = {
-            'username': user.username,
-            'email': user.email
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-    def check_existing_user(self, username, email):
-        return User.objects.filter(username=username, email=email).first()
-
-    def create_user(self, username, email):
-        try:
-            user = User.objects.create(
-                email=email,
-                username=username
-            )
-            return user
-        except IntegrityError:
-            return None
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def send_confirmation_email(self, email, confirmation_code):
         subject = 'Добро пожаловать!'
@@ -120,12 +105,13 @@ class UserViewSet(viewsets.ModelViewSet):
             return self._get_current_user(request)
         elif request.method == 'PATCH':
             return self._update_current_user(request)
-        else:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def _get_current_user(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
     def _update_current_user(self, request):
         serializer = UserSerializer(request.user,
@@ -133,7 +119,10 @@ class UserViewSet(viewsets.ModelViewSet):
                                     partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class CategoryViewSet(mixins.ListModelMixin,
