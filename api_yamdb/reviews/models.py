@@ -5,18 +5,17 @@ from reviews.validators import names_validator, symbols_validator
 from api_yamdb.settings import TEXT_LIMIT
 from django.contrib.auth.models import AbstractUser
 
-USER = 'user'
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-
-ROLES = (
-    (USER, 'Пользователь'),
-    (MODERATOR, 'Модератор'),
-    (ADMIN, 'Администратор'),
-)
-
 
 class User(AbstractUser):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
+
+    ROLES = (
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
+    )
     username = models.CharField(
         verbose_name='Имя пользователя',
         max_length=settings.USER_LENGHT,
@@ -50,11 +49,11 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.is_staff or self.role == ADMIN or self.is_superuser
+        return self.is_staff or self.role == self.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == self.MODERATOR
 
 
 class Category(models.Model):

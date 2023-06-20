@@ -1,7 +1,13 @@
 from rest_framework import serializers
 from reviews.validators import names_validator, symbols_validator
-from reviews.models import Comment, Review, User
-from reviews.models import Category, Genre, Title
+from reviews.models import (
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+    User,
+)
 
 USERNAME_LENGHT = 150
 EMAIL_LENGHT = 250
@@ -26,6 +32,25 @@ class SignupSerializer(serializers.Serializer):
         max_length=EMAIL_LENGHT,
         required=True
     )
+
+    def create(self, validated_data):
+        # Валидация данных пользователя
+        validated_data = self.validate(validated_data)
+
+        # Создание нового пользователя
+        user = User.objects.create(**validated_data)
+
+        return user
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+
+        # Проверка на существование пользователя с таким же именем или почтой
+        if User.objects.filter(username=username, email=email).exists():
+            raise serializers.ValidationError('Пользователь уже существует.')
+
+        return data
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
