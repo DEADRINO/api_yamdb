@@ -37,13 +37,18 @@ class SignupSerializer(serializers.Serializer):
         username = data.get('username')
         email = data.get('email')
 
+        if User.objects.filter(username=username, email=email).exists():
+            return data
+
         existing_user = self.check_existing_user(username, email)
         if existing_user:
-            return None
+            raise serializers.ValidationError('Uncorrect user data')
+
         return data
 
     def check_existing_user(self, username, email):
-        return User.objects.filter(username=username, email=email).first()
+        return (User.objects.filter(username=username).exists()
+                or User.objects.filter(email=email).exists())
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
