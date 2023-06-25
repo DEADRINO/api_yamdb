@@ -49,32 +49,20 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
-        user = self.create_user(username, email)
+        user, some_data = User.objects.get_or_create(email=email,
+                                                     username=username)
         if not user:
             return Response(
                 'Не удалось создать пользователя.',
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         confirmation_code = default_token_generator.make_token(user)
-        to_email = email
-        self.send_confirmation_email(to_email, confirmation_code)
-
+        self.send_confirmation_email(email, confirmation_code)
         response_data = {
             'username': user.username,
             'email': user.email
         }
         return Response(response_data, status=status.HTTP_200_OK)
-
-    def create_user(self, username, email):
-        try:
-            user = User.objects.create(
-                email=email,
-                username=username
-            )
-            return user
-        except IntegrityError:
-            return None
 
     def send_confirmation_email(self, email, confirmation_code):
         subject = 'Добро пожаловать!'
