@@ -1,7 +1,7 @@
 from . import views
 from django.urls import include, path
 from rest_framework import routers
-from v1.views import (
+from .views import (
     CategoryViewSet,
     CommentViewSet,
     GenreViewSet,

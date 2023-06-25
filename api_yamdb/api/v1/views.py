@@ -2,11 +2,13 @@ from warnings import filters
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets, permissions
+from rest_framework import filters, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models import Avg
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
@@ -35,6 +37,7 @@ from .serializers import (
     UserSerializer,
 )
 from .filters import FilterTitle
+from .mixins import BaseViewSet
 
 
 class SignUpView(APIView):
@@ -43,18 +46,35 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            confirmation_code = default_token_generator.make_token(user)
-            self.send_confirmation_email(user.email, confirmation_code)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get('username')
+        email = serializer.validated_data.get('email')
+        user = self.create_user(username, email)
+        if not user:
+            return Response(
+                'Не удалось создать пользователя.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            response_data = {
-                'username': user.username,
-                'email': user.email
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
+        confirmation_code = default_token_generator.make_token(user)
+        to_email = email
+        self.send_confirmation_email(to_email, confirmation_code)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        response_data = {
+            'username': user.username,
+            'email': user.email
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def create_user(self, username, email):
+        try:
+            user = User.objects.create(
+                email=email,
+                username=username
+            )
+            return user
+        except IntegrityError:
+            return None
 
     def send_confirmation_email(self, email, confirmation_code):
         subject = 'Добро пожаловать!'
@@ -125,29 +145,15 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
 
-class CategoryViewSet(mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(BaseViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnlyPermission, )
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class GenreViewSet(mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(BaseViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnlyPermission,)
     pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -162,6 +168,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ("retrieve", "list"):
             return TitleReadSerializer
         return TitleSerializer
+
+    def get_queryset(self):
+        queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+        return queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

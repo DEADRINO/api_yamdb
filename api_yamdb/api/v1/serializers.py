@@ -26,31 +26,24 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=USERNAME_LENGHT,
         required=True,
-        validators=[symbols_validator, names_validator]
+        validators=[symbols_validator, names_validator],
     )
     email = serializers.EmailField(
         max_length=EMAIL_LENGHT,
         required=True
     )
 
-    def create(self, validated_data):
-        # Валидация данных пользователя
-        validated_data = self.validate(validated_data)
-
-        # Создание нового пользователя
-        user = User.objects.create(**validated_data)
-
-        return user
-
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
 
-        # Проверка на существование пользователя с таким же именем или почтой
-        if User.objects.filter(username=username, email=email).exists():
-            raise serializers.ValidationError('Пользователь уже существует.')
-
+        existing_user = self.check_existing_user(username, email)
+        if existing_user:
+            return None
         return data
+
+    def check_existing_user(self, username, email):
+        return User.objects.filter(username=username, email=email).first()
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
