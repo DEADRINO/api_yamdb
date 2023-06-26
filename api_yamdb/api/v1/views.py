@@ -109,18 +109,22 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         if request.method == 'GET':
-            return self._get_current_user(request)
-        elif request.method == 'PATCH':
-            return self._update_current_user(request)
+            serializer = UserSerializer(request.user)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        # elif request.method == 'PATCH':
+        #     return self._update_current_user(request)
 
-    def _get_current_user(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
+    # def _get_current_user(self, request):
+    #     serializer = UserSerializer(request.user)
+        # return Response(
+        #     serializer.data,
+        #     status=status.HTTP_200_OK
+        # )
 
-    def _update_current_user(self, request):
+    # def _update_current_user(self, request):
         serializer = UserSerializer(request.user,
                                     data=request.data,
                                     partial=True)
