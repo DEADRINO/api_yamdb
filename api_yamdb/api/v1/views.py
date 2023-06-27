@@ -161,7 +161,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
     def get_queryset(self):
-        queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+        queryset = Title.objects.annotate(rating=Avg('reviews__score'))
         return queryset
 
 
